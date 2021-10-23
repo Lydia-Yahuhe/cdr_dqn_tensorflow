@@ -1,0 +1,30 @@
+# 1. 训练dqn policy
+# 2. 测试dqn，并输出state-action数据dqn_policy_i，作为专家数据
+# 3. 训练gail policy
+# 4. 测试gail，并输出state-action数据gail_policy_i
+# 5. 对比dqn_policy_i和gail_policy_i中动作的使用分布
+
+# parameters
+        EpRewMean: reward giver(GAN)给的奖励值
+    EpTrueRewMean: 自定义的奖励值的平均数，越大越好
+     d_expert_acc: 判别器对专家策略判断为真的概率大于50%，最后接近于1
+  d_generator_acc: 判别器对交互策略判断为真的概率小于50%，最后接近于0
+    d_expert_loss:
+ d_generator_loss:
+   d_entropy_loss: 越小越好
+        d_entropy: 越大越好
+  ev_tdlam_before:
+        g_entloss: 新策略的熵损失（新策略的的熵和系数）
+        g_entropy: 新策略的熵
+        g_mean_kl: 越小越好
+      g_optimgain: TRPO的目标函数
+       g_surrgain: TRPO的目标函数(新就策略的比例ratio和优势函数atarg)
+
+# experiments
+  Bala, 测试集(2236), 随机策略, 解脱率=60.96%, mean_rew=-0.090
+e_Bale, 测试集(2236),    DQN, lr=5e-4, batch_size=256, exploration_fraction=0.2, steps=100000, 解脱率=63.33%, mean_rew=0.007
+n_Bule, 测试集(2236),    DQN, lr=5e-4, batch_size=16, exploration_fraction=0.2, steps=100000, 解脱率=59.21%, mean_rew=0.023
+
+todo:
+1. 以武汉空域为场景范围，制作飞行冲突
+2.
