@@ -2,7 +2,7 @@ import pymongo
 import numpy as np
 from tqdm import tqdm
 
-from fltsim.model import Waypoint, Routing, Aircraft, aircraftTypes, FlightPlan, DataSet, Point2D
+from fltsim.model import Waypoint, Routing, Aircraft, aircraftTypes, FlightPlan, DataSet, Point2D, ConflictScenarioInfo
 
 
 def load_waypoint(db):
@@ -95,7 +95,7 @@ def load_and_split_data(path='scenarios_gail', size=None, split_ratio=0.8):
     else:
         size = min(size, len(data))
 
-    split_size = int(size*split_ratio)
+    split_size = int(size * split_ratio)
     return data[:split_size], data[split_size:size]
 
 
@@ -103,7 +103,8 @@ def load_data(collection):
     scenes = []
 
     data = list(database[collection].find())
-    for e in tqdm(data, desc='Loading from '+collection):
+    i = 0
+    for e in tqdm(data, desc='Loading from ' + collection):
         conflict_ac, clock = e['id'].split('-'), e['time'],
         other = [e['pos0'], e['pos1'], e['hDist'], e['vDist']]
 
@@ -131,9 +132,13 @@ def load_data(collection):
             else:
                 fpl_list_ac.append(fpl)
 
+        i += 1
         fpl_list_ac += fpl_list[:]
-        scenes.append(dict(time=clock, conflict_ac=conflict_ac, other=other,
-                           start=min(starts)-1, end=max(starts), fpl_list=fpl_list_ac))
+        scenes.append(ConflictScenarioInfo(id='No.{}'.format(i), time=clock, conflict_ac=conflict_ac, other=other,
+                                           start=min(starts) - 1, end=max(starts), fpl_list=fpl_list_ac))
+
+        if i >= 100:
+            break
 
     # np.random.shuffle(scenes)
     return scenes

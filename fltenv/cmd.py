@@ -29,7 +29,7 @@ def calc_level(alt, v_spd, delta):
     return flight_level[idx+delta]
 
 
-def check_cmd(cmd, a, alt_check):
+def check_cmd(cmd, a, check_dict):
     if not a.is_enroute() or not a.next_leg:
         return False, '1'
 
@@ -40,6 +40,8 @@ def check_cmd(cmd, a, alt_check):
         return True, 'Spd'
 
     if cmd.cmdType == atccmd.ATCCmdType.Altitude:
+        check = check_dict['ALT']
+
         # 最高12000m，最低6000m
         target_alt = cmd.targetAlt
         if target_alt > 12000 or target_alt < 6000:
@@ -59,9 +61,9 @@ def check_cmd(cmd, a, alt_check):
         if prefix == 0:
             return True, '0'
 
-        if len(alt_check) > 0 and prefix not in alt_check:
+        if len(check) > 0 and prefix not in check:
             return False, '4'
-        alt_check.append(prefix)
+        check.append(prefix)
         return True, '0'
 
     raise NotImplementedError
@@ -127,13 +129,10 @@ def int_2_atc_cmd(time: int, idx: int, target):
 
 
 def reward_for_cmd(cmd_info):
-    cmd_list = cmd_info['cmd']
-    ok_list = cmd_info['ok']
-
-    if False in ok_list:
-        reward = sum([-1.0*int(not ok) for ok in ok_list])
-    else:
-        # reward = sum([int(cmd.delta != 0.0) * (-0.1) for cmd in cmd_list])
-        reward = -0.0
-
+    reward = 0.0
+    for cmd in cmd_info['cmd']:
+        if not cmd.ok:
+            reward += -0.5
+        else:
+            reward += int(cmd.delta != 0.0) * (-0.2)
     return reward

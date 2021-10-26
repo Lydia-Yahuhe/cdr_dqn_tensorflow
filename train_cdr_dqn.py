@@ -70,12 +70,13 @@ def train(test=False):
             network=network,  # 隐藏节点，隐藏层数
             lr=5e-4,
             batch_size=32,
-            total_timesteps=100000,
+            total_timesteps=1000,
             buffer_size=100000,
 
             param_noise=True,
             prioritized_replay=True,
         )
+        env.close()
         print('Save model to my_model.pkl')
         act.save(root+'.pkl')
     else:
@@ -86,6 +87,9 @@ def train(test=False):
         output_dqn_policy(act, env, save_path='dqn_policy')
 
 
+# 高度（三维）
+# 连线
+# 冲突信息与指令标识
 if __name__ == '__main__':
     train()
     # train(test=True)

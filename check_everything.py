@@ -159,4 +159,5 @@ if __name__ == '__main__':
     # scenario_run_to_end()
     # run_and_detect()
     # run_and_detect_and_resolve()
-    run_and_resolve_and_visual()
+    # run_and_resolve_and_visual()
+    pass

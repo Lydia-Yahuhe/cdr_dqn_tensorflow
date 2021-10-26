@@ -31,7 +31,7 @@ def update_guidance(now, guidance, status, control, profile):
     alt_cmd = control.altCmd
     if alt_cmd is not None and now - alt_cmd.assignTime == 0:
         guidance.targetAlt = alt_cmd.targetAlt
-        control.transition(mode='Alt', ok=True)
+        control.transition(mode='Alt')
 
     # 航向引导（Dogleg机动）
     hdg_cmd = control.hdgCmd

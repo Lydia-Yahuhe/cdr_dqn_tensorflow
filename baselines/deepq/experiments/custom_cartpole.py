@@ -61,7 +61,7 @@ if __name__ == '__main__':
             is_solved = t > 100 and np.mean(episode_rewards[-101:-1]) >= 200
             if is_solved:
                 # Show off the result
-                env.render()
+                env.render(,
             else:
                 # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
                 if t > 1000:

@@ -282,7 +282,9 @@ def learn(env,
                 update_target()
 
         if done:
-            print(">>> Episode: ", episode, "Step:", t, round(episode_rewards[-1], 1))
+            env.render()
+
+            print(">>> ", episode, t, round(episode_rewards[-1], 1), info['result'])
             episode += 1
             obs = env.reset()
             episode_rewards.append(0.0)

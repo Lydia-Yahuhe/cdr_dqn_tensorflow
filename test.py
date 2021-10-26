@@ -1,73 +1,73 @@
-import random
-
 import numpy as np
-
-from baselines import deepq
-from baselines.common import models
-from fltenv import ConflictScene
-
-from fltenv.env import ConflictEnv
-
-root = ".\\dataset\\my_model"
+import cv2
 
 
-def output_dqn_policy(env):
-    data = env.train + env.test
-    size = len(data)
-    count = 0
+def cv2_demo_trackbar():
+    def nothing(x):
+        pass
 
-    for i, info in enumerate(data):
-        print(i, size, '{}%'.format(count/size*100.0))
+    # 创建一个黑色的图像，一个窗口
+    img = np.zeros((300, 512, 3), np.uint8)
+    cv2.namedWindow('image')
 
-        times = 0
-        while True:
-            print('\t>>> No.{} resolution,'.format(times+1), end='\t')
-            scene = ConflictScene(info, limit=env.limit)
-            done = False
-            result = {'result': False}
+    # 创建颜色变化的轨迹栏
+    cv2.createTrackbar('R', 'image', 0, 255, nothing)
+    cv2.createTrackbar('G', 'image', 0, 255, nothing)
+    cv2.createTrackbar('B', 'image', 0, 255, nothing)
+    # 为 ON/OFF 功能创建开关
+    switch = '0 : OFF \n1 : ON'
+    cv2.createTrackbar(switch, 'image', 0, 1, nothing)
 
-            while not done:
-                env_action = random.randint(0, 161)
-                next_obs, rew, done, result = env.step(env_action, scene=scene)
-
-            if result['result']:
-                print('solved')
-                count += 1
-                break
-
-            times += 1
-            if times >= 10:
-                print('failed')
-                break
-
-            print()
-
-
-def train(test=False):
-    env = ConflictEnv()
-    network = models.mlp(num_hidden=128, num_layers=2)
-    if not test:
-        act = deepq.learn(
-            env,
-            network=network,  # 隐藏节点，隐藏层数
-            lr=1e-3,
-            batch_size=32,
-            total_timesteps=100000,
-            buffer_size=100000,
-
-            param_noise=True,
-            prioritized_replay=True,
-        )
-        print('Save model to my_model.pkl')
-        act.save(root+'.pkl')
-    else:
-        act = deepq.learn(env,
-                          network=network,
-                          total_timesteps=0,
-                          load_path=root+".pkl")
-        output_dqn_policy(env)
+    while 1:
+        cv2.imshow('image', img)
+        k = cv2.waitKey(1) & 0xFF
+        if k == 27:
+            break
+        # 得到四条轨迹的当前位置
+        r = cv2.getTrackbarPos('R', 'image')
+        g = cv2.getTrackbarPos('G', 'image')
+        b = cv2.getTrackbarPos('B', 'image')
+        s = cv2.getTrackbarPos(switch, 'image')
+        if s == 0:
+            img[:] = 0
+        else:
+            img[:] = [b, g, r]
+    cv2.destroyAllWindows()
 
 
-if __name__ == '__main__':
-    # train()
-    train(test=True)
+def cv2_tracks_bar():
+    # 图像膨胀函数
+    def img_dilated(img, d):
+        # 定义 kernel
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (d, d))
+        # 图像膨胀
+        dilated = cv2.dilate(img, kernel)
+        # 返回膨胀图片
+        return dilated
+
+    # 回调函数，因为只能传一个参数，不方便，所以pass
+    def nothing(pos):
+        pass
+
+    # 读取图片
+    img = cv2.imread("wuhan_base.jpg", 1)
+    # 创建老窗口
+    cv2.namedWindow('OldImg')
+    # 绑定老窗口和滑动条（滑动条的数值）
+    cv2.createTrackbar('D', 'OldImg', 1, 30, nothing)
+    while True:
+        # 提取滑动条的数值d
+        d = cv2.getTrackbarPos('D', 'OldImg')
+        # 滑动条数字传入函数img_dilated中，并且调用函数img_dilated
+        dilated = img_dilated(img, d)
+        # 绑定 img 和 dilated
+        result = np.hstack([img, dilated])
+        cv2.imshow('OldImg', result)
+        # 设置推出键
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    # 关闭窗口
+    cv2.destroyAllWindows()
+
+
+cv2_tracks_bar()

@@ -7,8 +7,6 @@ from baselines.common import colorize
 from fltenv.agent_Set import AircraftAgentSet
 from fltenv.cmd import CmdCount, int_2_atc_cmd, check_cmd
 
-from fltsim.utils import make_bbox, mid_position, build_rt_index
-
 
 @contextmanager
 def timed(msg):
@@ -20,19 +18,19 @@ def timed(msg):
 
 class ConflictScene:
     def __init__(self, info, limit=0):
-        self.conflict_ac, self.clock = info['conflict_ac'], info['time']
-        fpl_list = info['fpl_list']
+        self.info = info
 
-        self.agentSet = AircraftAgentSet(fpl_list=fpl_list, start=info['start'])
+        self.conflict_ac, self.clock = info.conflict_ac, info.time
+
+        self.agentSet = AircraftAgentSet(fpl_list=info.fpl_list, start=info.start)
         self.agentSet.do_step(self.clock - 300 + limit, basic=True)
-        self.conflict_pos = info['other'][0]
+        self.conflict_pos = info.other[0]
 
         # print('\nNew scenario--------------------------------')
-        # print(' Conflict Info: ', self.conflict_ac, self.clock, self.agentSet.time, len(fpl_list), info['other'])
+        # print(' Conflict Info: ', self.conflict_ac, self.clock, self.agentSet.time, len(info.fpl_list))
 
-        self.cmd_list = {}
-        for c_ac in self.conflict_ac:
-            self.cmd_list[c_ac] = []
+        self.cmd_check_dict = {ac: {'HDG': [], 'ALT': [], 'SPD': []} for ac in self.conflict_ac}
+        self.cmd_info = {}
 
     def now(self):
         return self.agentSet.time
@@ -41,79 +39,52 @@ class ConflictScene:
         state = [[0.0 for _ in range(7)] for _ in range(50)]
 
         j = 0
-        # ghost = AircraftAgentSet(other=self.agentSet)
-        # ghost.do_step(self.now() + 60, basic=True)
-        # ghost_2 = AircraftAgentSet(other=ghost)
-        # ghost_2.do_step(self.now()+120, basic=True)
         for agent in self.agentSet.agent_en:
             pos = agent.position
+            v_spd, h_spd, hdg = agent.status.vSpd, agent.status.hSpd, agent.status.heading
             ele = [int(agent.id in self.conflict_ac),
                    pos[0] - self.conflict_pos[0],
                    pos[1] - self.conflict_pos[1],
                    (pos[2] - self.conflict_pos[2]) / 3000,
-                   (agent.status.hSpd - 150) / 100,
-                   agent.status.vSpd / 20,
-                   agent.status.heading / 180]
+                   (h_spd - 150) / 100,
+                    v_spd / 20,
+                    hdg / 180]
 
-            # agent_g = ghost.agents[agent.id]
-            # pos_g = agent_g.position
-            # if agent_g.is_enroute():
-            #     ele += [pos_g[0] - self.conflict_pos[0],
-            #             pos_g[1] - self.conflict_pos[1],
-            #             (pos_g[2] - self.conflict_pos[2]) / 3000,
-            #             (agent_g.status.hSpd - 150) / 100,
-            #             agent_g.status.vSpd / 20,
-            #             agent_g.status.heading / 180]
-            # else:
-            #     ele += [0.0 for _ in range(6)]
-            #
-            # agent_g = ghost_2.agents[agent.id]
-            # pos_g = agent_g.position
-            # if agent_g.is_enroute():
-            #     ele += [pos_g[0] - self.conflict_pos[0],
-            #             pos_g[1] - self.conflict_pos[1],
-            #             (pos_g[2] - self.conflict_pos[2]) / 3000,
-            #             (agent_g.status.hSpd - 150) / 100,
-            #             agent_g.status.vSpd / 20,
-            #             agent_g.status.heading / 180]
-            # else:
-            #     ele += [0.0 for _ in range(6)]
-
-            j = min(50 - 1, j)
-            state[j] = ele
+            state[min(50 - 1, j)] = ele
             j += 1
 
         return np.concatenate(state)
 
     def do_step(self, action):
-        agent, idx = self.conflict_ac[action // CmdCount], action % CmdCount
-        check = self.cmd_list[agent]
+        agent_id, idx = self.conflict_ac[action // CmdCount], action % CmdCount
+        now = self.now()
+        agent = self.agentSet.agents[agent_id]
+        [hold, *cmd_list] = int_2_atc_cmd(now + 1, idx, agent)
+        # print(now, action, hold, end=' ')
+        print(now, action, hold, end=' ')
 
-        agent = self.agentSet.agents[agent]
-        [hold, *cmd_list] = int_2_atc_cmd(self.now() + 1, idx, agent)
-        print(action, hold, end=' ')
-        # print(action, hold, cmd, end=' ')
-
+        # 执行hold，并探测冲突
         self.agentSet.do_step(duration=hold)
         conflicts = self.agentSet.detect_conflict_list(search=self.conflict_ac)
-        # solved, done, cmd
         if len(conflicts) > 0:
-            return False, True, None
+            return False, True, None  # solved, done, cmd
 
-        ok_list = []
+        # 分配动作
         for cmd in cmd_list:
-            ok, reason = check_cmd(cmd, agent, check)
-            ok_list.append(ok)
-            if ok:
-                agent.assign_cmd(cmd)
-        cmd_info = {'cmd': cmd_list, 'ok': ok_list}
-        # print(agent.control)
-        if self.__do_real(self.now() + 120):
-            return False, True, cmd_info
+            cmd.ok, reason = check_cmd(cmd, agent, self.cmd_check_dict[agent_id])
+            # print(now, hold, cmd.assignTime, self.now())
+            agent.assign_cmd(cmd)
+        cmd_info = {'agent': agent_id, 'cmd': cmd_list, 'hold': hold}
+        self.cmd_info[now] = cmd_info
 
+        # 执行动作
+        if self.__do_real(self.now() + 120):
+            return False, True, cmd_info  # solved, done, cmd
+
+        # 探测执行动作后是否存在冲突
         has_conflict = self.__do_fake(self.clock + 300)
         done = not has_conflict or self.now() - self.clock >= 300
-        return not has_conflict, done, cmd_info
+        return not has_conflict, done, cmd_info  # solved, done, cmd
 
     def __do_real(self, end_time):
         while self.now() < end_time:

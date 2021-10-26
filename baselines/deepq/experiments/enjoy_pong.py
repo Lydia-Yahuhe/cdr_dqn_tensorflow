@@ -18,7 +18,7 @@ def main():
         obs, done = env.reset(), False
         episode_rew = 0
         while not done:
-            env.render()
+            env.render(,
             obs, rew, done, _ = env.step(model(obs[None])[0])
             episode_rew += rew
         print("Episode reward", episode_rew)

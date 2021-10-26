@@ -108,3 +108,19 @@ class DataSet:
     routings: Dict[str, Routing]
     flightPlans: Dict[str, FlightPlan]
     aircrafts: Dict[str, Aircraft]
+
+
+@dataclass
+class ConflictScenarioInfo:
+    id: str
+    time: int
+    conflict_ac: List[str]
+    other: List[object]
+    start: int
+    end: int
+    fpl_list: List[FlightPlan]
+
+    def to_dict(self):
+        [_, _, h_dist, v_dist] = self.other
+        return dict(id=self.id, time=self.time, c_ac=self.conflict_ac,
+                    fpl=len(self.fpl_list), h_dist=round(h_dist, 1), v_dist=round(v_dist, 1))

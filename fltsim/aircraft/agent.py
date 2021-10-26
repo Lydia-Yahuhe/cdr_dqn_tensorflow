@@ -32,12 +32,15 @@ class AircraftAgent:
     def next(self, delta=2):
         return self.profile.next(delta)
 
+    def get_x_data(self):
+        return self.status.x_data()
+
     @property
     def position(self):
         loc = self.status.location
         return [loc.lng, loc.lat, self.status.alt]
 
-    def do_step(self, now, duration=1):
+    def do_step(self, now, duration=1, interval=8):
         status = self.status
         profile, control, guidance = self.profile, self.control, self.guidance
         for t in range(duration):
@@ -57,9 +60,13 @@ class AircraftAgent:
                 update_profile(profile, status)
 
                 # 记录轨迹
-                self.tracks[clock] = self.position + [status.hSpd, status.course]
+                if clock % interval == 0:
+                    self.tracks[clock] = self.get_x_data()
 
     def assign_cmd(self, cmd):
+        if not cmd.ok:
+            return
+
         # 如果指令的执行时间小于目前时间，则报错
         if cmd.cmdType == atccmd.ATCCmdType.Altitude:
             self.control.altCmd = cmd

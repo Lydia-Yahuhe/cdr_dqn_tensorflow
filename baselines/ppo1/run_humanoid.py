@@ -65,7 +65,7 @@ def main():
         while True:
             action = pi.act(stochastic=False, ob=ob)[0]
             ob, _, done, _ =  env.step(action)
-            env.render()
+            env.render(,
             if done:
                 ob = env.reset()
 

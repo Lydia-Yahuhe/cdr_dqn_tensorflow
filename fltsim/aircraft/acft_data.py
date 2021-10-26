@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 
-from typing import List, Dict
+from typing import List
 from enum import Enum
 
 from fltsim.model import Routing, Waypoint, aircraftTypes, AircraftType, FlightPerformance, Point2D
@@ -12,36 +12,21 @@ FPLPhase = Enum('FPLPhase', ('Schedule', 'EnRoute', 'Finished'))
 
 @dataclass
 class FlightControl:
-    preCmd: Dict[int, List[object]] = None
     altCmd: atccmd.AltCmd = None
     spdCmd: atccmd.SpdCmd = None
     hdgCmd: atccmd.HdgCmd = None
 
     def set(self, other: FlightControl):
-        if other.preCmd is None:
-            self.preCmd = None
-        else:
-            self.preCmd = {key: value for key, value in other.preCmd.items()}
-
         self.altCmd = other.altCmd
         self.spdCmd = other.spdCmd
         self.hdgCmd = other.hdgCmd
 
-    def transition(self, mode='Alt', ok=True):
-        if self.preCmd is None:
-            self.preCmd = {}
-
+    def transition(self, mode='Alt'):
         if mode == 'Alt':
-            alt_cmd = self.altCmd
-            self.preCmd[alt_cmd.assignTime] = [alt_cmd, ok]
             self.altCmd = None
         elif mode == 'Spd':
-            spd_cmd = self.spdCmd
-            self.preCmd[spd_cmd.assignTime] = [spd_cmd, ok]
             self.spdCmd = None
         elif mode == 'Hdg':
-            hdg_cmd = self.hdgCmd
-            self.preCmd[hdg_cmd.assignTime] = [hdg_cmd, ok]
             self.hdgCmd = None
         else:
             raise NotImplementedError
@@ -174,3 +159,6 @@ class FlightStatus:
         # pylint: disable=no-member
         self.performance.copy(other.performance)
         self.phase = other.phase
+
+    def x_data(self):
+        return self.location.toArray()+[self.alt, self.hSpd, self.vSpd, self.heading]

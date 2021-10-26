@@ -129,12 +129,21 @@ def position_in_bbox(bbox, p, delta=(0.05, 0.05, 300)):
     return x + y * x_size + z * x_size * y_size
 
 
-def build_rt_index(agents, other=None):
+def build_rt_index(agents):
     p = index.Property()
     p.dimension = 3
     idx = index.Index(properties=p)
     for i, a in enumerate(agents):
         idx.insert(i, make_bbox(a.position))
+    return idx
+
+
+def build_rt_index_with_list(points):
+    p = index.Property()
+    p.dimension = 3
+    idx = index.Index(properties=p)
+    for i, point in enumerate(points):
+        idx.insert(i, make_bbox(point))
     return idx
 
 
@@ -270,3 +279,21 @@ def convert_with_align(n, x=3, align=4):
 
     str_origin = str(convert(n, x))
     return '0'*(align-len(str_origin))+str_origin
+
+
+def convert_coord_to_pixel(objects, border=(108, 118, 28, 35), scale=100):
+    min_x, max_x, min_y, max_y = border
+    scale_x = (max_x - min_x) * scale
+    scale_y = (max_y - min_y) * scale
+
+    tmp = []
+    for [x, y, *_] in objects:
+        x_idx = int((x - min_x) / (max_x - min_x) * scale_x)
+        y_idx = int((max_y - y) / (max_y - min_y) * scale_y)
+        tmp.append([x_idx, y_idx])
+    return tmp
+
+
+def convert_km_to_pixel_number(km, scale=100):
+    degree = km / 111
+    return int(degree*scale)

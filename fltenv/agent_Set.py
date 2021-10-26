@@ -43,7 +43,6 @@ class AircraftAgentSet:
                 continue
 
             agent.do_step(now, duration)
-
             if agent.is_enroute():
                 self.agent_en.append(agent)
 

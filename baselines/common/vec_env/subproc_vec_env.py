@@ -21,7 +21,7 @@ def worker(remote, parent_remote, env_fn_wrappers):
             elif cmd == 'reset':
                 remote.send([env.reset() for env in envs])
             elif cmd == 'render':
-                remote.send([env.render(mode='rgb_array') for env in envs])
+                remote.send([env.render() for env in envs])
             elif cmd == 'close':
                 remote.close()
                 break
