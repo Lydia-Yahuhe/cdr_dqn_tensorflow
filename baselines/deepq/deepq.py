@@ -1,3 +1,4 @@
+import csv
 import os
 import tempfile
 
@@ -230,7 +231,10 @@ def learn(env,
         load_variables(load_path)
         logger.log('Loaded model from {}'.format(load_path))
 
-    episode_rewards, errors, result = [0.0], [], []
+    episode_rewards, errors = [0.0], []
+    acts_analysis = []
+    acts_tmp = []
+
     obs = env.reset()
     reset = True
     episode = 1
@@ -261,6 +265,7 @@ def learn(env,
         obs = new_obs
 
         episode_rewards[-1] += rew
+        acts_tmp.append(env_action)
 
         if t > learning_starts and t % train_freq == 0:
             # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
@@ -272,7 +277,7 @@ def learn(env,
                 weights, batch_idxes = np.ones_like(rewards), None
 
             [td_errors, weight_errors] = train(obses_t, actions, rewards, obses_tp1, dones, weights)
-            errors.append(weight_errors)
+            # errors.append(weight_errors)
             if prioritized_replay:
                 new_priorities = np.abs(td_errors) + prioritized_replay_eps
                 replay_buffer.update_priorities(batch_idxes, new_priorities)
@@ -282,26 +287,30 @@ def learn(env,
                 update_target()
 
         if done:
-            env.render()
+            # env.render()
 
             print(">>> ", episode, t, round(episode_rewards[-1], 1), info['result'])
             episode += 1
             obs = env.reset()
             episode_rewards.append(0.0)
-            result.append(float(info['result']))
+            acts_analysis.append([info['result']]+acts_tmp)
+            acts_tmp = []
             reset = True
 
             if episode % print_freq == 0:
                 logger.record_tabular("steps", t)
                 logger.record_tabular("episodes", episode)
-                logger.record_tabular('loss', np.mean(errors) if len(errors) > 0 else None)
+                # logger.record_tabular('loss', np.mean(errors) if len(errors) > 0 else None)
                 logger.record_tabular("mean 100 episode reward", round(np.mean(episode_rewards), 2))
-                logger.record_tabular("mean solve", np.mean(result))
-                logger.record_tabular("% time spent exploring", int(100 * exploration.value(t)))
+                logger.record_tabular("time spent exploring", int(100 * exploration.value(t)))
                 logger.dump_tabular()
-                errors = []
-                result = []
+
+                writer = csv.writer(open('acts_analysis.csv', 'a+', newline=''))
+                writer.writerows(acts_analysis)
+
+                # errors = []
                 episode_rewards = [0.0]
+                acts_analysis = []
 
         if t % 1000 == 0:
             # path = "dataset/my_model_" + str(t) + '.pkl'
