@@ -102,11 +102,10 @@ def generate_wuhan_base_map(size=(700, 1000, 3), save=None, show=False, **kwargs
     image = np.zeros(size, np.uint8)
 
     points = convert_coord_to_pixel(vertices, **kwargs)
-
     segments = search_routing_in_a_area(vertices)
     for name, coord in segments.items():
         coord_idx = convert_coord_to_pixel(coord, **kwargs)
-        cv2.line(image, coord_idx[0], coord_idx[1], (205, 205, 193), 1)
+        cv2.line(image, coord_idx[0], coord_idx[1], (240, 32, 160), 1)
     pts = np.array(points, np.int32).reshape((-1, 1, 2,))
     cv2.polylines(image, [pts], True, (255, 191, 0), 2)
 
@@ -124,20 +123,25 @@ def generate_wuhan_base_map(size=(700, 1000, 3), save=None, show=False, **kwargs
 # 点的颜色为
 def add_points_on_base_map(points, image, save=False, display=False, font_scale=0.4, font=cv2.FONT_HERSHEY_SIMPLEX,
                            **kwargs):
-    radius = 10
+    radius = 2
     points_just_coord = []
     for [name, is_c_ac, lng, lat, alt, *point] in points:
         coord = [lng, lat]
         coord_idx = convert_coord_to_pixel([coord], **kwargs)[0]
 
-        blue = min(255, max((alt-6000) / 6000 * 255, 0))
-        if is_c_ac:
-            cv2.circle(image, coord_idx, radius, (0, 0, blue), -1)
-        else:
-            cv2.circle(image, coord_idx, radius, (0, 255-blue, 255), -1)
+        # blue = min(255, max((alt-6000) / 6000 * 255, 0))
+        # if is_c_ac:
+        #     cv2.circle(image, coord_idx, radius, (0, 0, blue), -1)
+        # else:
+        #     cv2.circle(image, coord_idx, radius, (0, 255-blue, 255), -1)
 
-        heading_spd_point = destination(coord, point[2], 180/3600*point[0]*NM2M)
-        add_lines_on_base_map([[coord, heading_spd_point, False]], image, display=False)
+        if is_c_ac:
+            cv2.circle(image, coord_idx, radius, (0, 0, 255), -1)
+        else:
+            cv2.circle(image, coord_idx, radius, (0, 255, 0), -1)
+
+        # heading_spd_point = destination(coord, point[2], 180/3600*point[0]*NM2M)
+        # add_lines_on_base_map([[coord, heading_spd_point, False]], image, display=False)
 
         if display and is_c_ac:
             [x, y] = coord_idx

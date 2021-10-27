@@ -87,9 +87,6 @@ def train(test=False):
         output_dqn_policy(act, env, save_path='dqn_policy')
 
 
-# 高度（三维）
-# 连线
-# 冲突信息与指令标识
 if __name__ == '__main__':
     train()
     # train(test=True)

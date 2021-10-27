@@ -76,7 +76,8 @@ class ConflictEnv(gym.Env, ABC):
         self.result = solved
         return states, rewards, done, {'result': solved}
 
-    def render(self, picture_size=(1920, 1080), wait=200, **kwargs):
+    def render(self, picture_size=(2000, 1400), wait=1000):
+        kwargs = dict(border=[108, 118, 28, 35], scale=200)
         play_speed = int(8000 / wait)
 
         info = self.scene.info
@@ -151,7 +152,7 @@ class ConflictEnv(gym.Env, ABC):
                     continue
 
                 pos0 = point[:3]
-                for j in idx.intersection(make_bbox(pos0, ext=(0.6, 0.6, 900))):
+                for j in idx.intersection(make_bbox(pos0, ext=(0.2, 0.2, 450))):
                     if i == j:
                         continue
 
@@ -161,7 +162,7 @@ class ConflictEnv(gym.Env, ABC):
                     has_conflict = h_dist <= 10 and v_dist < 300
                     lines.append([pos0, pos1, h_dist, v_dist, has_conflict])
 
-            frame = add_lines_on_base_map(lines, base_img, color=(255, 255, 255))
+            frame = add_lines_on_base_map(lines, base_img, color=(255, 255, 255), **kwargs)
 
             frame = cv2.resize(frame, picture_size)
             cv2.namedWindow('video', cv2.WINDOW_AUTOSIZE)

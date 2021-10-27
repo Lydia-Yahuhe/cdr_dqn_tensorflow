@@ -140,5 +140,5 @@ def load_data(collection):
         if i >= 100:
             break
 
-    # np.random.shuffle(scenes)
+    np.random.shuffle(scenes)
     return scenes
