@@ -165,9 +165,9 @@ class ConflictEnv(gym.Env, ABC):
             frame = add_lines_on_base_map(lines, base_img, color=(255, 255, 255), **kwargs)
 
             frame = cv2.resize(frame, picture_size)
-            cv2.namedWindow('video', cv2.WINDOW_AUTOSIZE)
-            cv2.imshow('video', frame)
-            cv2.waitKey(wait)
+            # cv2.namedWindow('video', cv2.WINDOW_AUTOSIZE)
+            # cv2.imshow('video', frame)
+            # cv2.waitKey(wait)
             self.video_out.write(frame)
 
     def close(self):
