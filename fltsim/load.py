@@ -137,7 +137,7 @@ def load_data(collection):
         scenes.append(ConflictScenarioInfo(id='No.{}'.format(i), time=clock, conflict_ac=conflict_ac, other=other,
                                            start=min(starts) - 1, end=max(starts), fpl_list=fpl_list_ac))
 
-        # if i >= 10000:
+        # if i >= 1000:
         #     break
 
     np.random.shuffle(scenes)

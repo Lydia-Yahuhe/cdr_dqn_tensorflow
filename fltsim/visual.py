@@ -90,7 +90,7 @@ def search_routing_in_a_area(vertices):
     return segments
 
 
-def generate_wuhan_base_map(size=(700, 1000, 3), save=None, show=False, **kwargs):
+def generate_wuhan_base_map(size=(1400, 2000, 3), save=None, show=False, **kwargs):
     # 武汉空域
     vertices = [(109.51666666666667, 31.9), (110.86666666666666, 33.53333333333333),
                 (114.07, 32.125), (115.81333333333333, 32.90833333333333),
@@ -105,7 +105,7 @@ def generate_wuhan_base_map(size=(700, 1000, 3), save=None, show=False, **kwargs
     segments = search_routing_in_a_area(vertices)
     for name, coord in segments.items():
         coord_idx = convert_coord_to_pixel(coord, **kwargs)
-        cv2.line(image, coord_idx[0], coord_idx[1], (240, 32, 160), 1)
+        cv2.line(image, coord_idx[0], coord_idx[1], (255, 255, 255), 1)
     pts = np.array(points, np.int32).reshape((-1, 1, 2,))
     cv2.polylines(image, [pts], True, (255, 191, 0), 2)
 
@@ -123,25 +123,30 @@ def generate_wuhan_base_map(size=(700, 1000, 3), save=None, show=False, **kwargs
 # 点的颜色为
 def add_points_on_base_map(points, image, save=False, display=False, font_scale=0.4, font=cv2.FONT_HERSHEY_SIMPLEX,
                            **kwargs):
-    radius = 2
+    radius = 20
     points_just_coord = []
     for [name, is_c_ac, lng, lat, alt, *point] in points:
         coord = [lng, lat]
         coord_idx = convert_coord_to_pixel([coord], **kwargs)[0]
 
-        # blue = min(255, max((alt-6000) / 6000 * 255, 0))
+        range_mixed = min(510, max((alt-6000) / 6000 * 255, 0))
+        if range_mixed <= 255:
+            cv2.circle(image, coord_idx, radius, (0, 255, range_mixed), -1)
+        else:
+            cv2.circle(image, coord_idx, radius, (0, 510-range_mixed, 255), -1)
+
         # if is_c_ac:
         #     cv2.circle(image, coord_idx, radius, (0, 0, blue), -1)
         # else:
         #     cv2.circle(image, coord_idx, radius, (0, 255-blue, 255), -1)
 
-        if is_c_ac:
-            cv2.circle(image, coord_idx, radius, (0, 0, 255), -1)
-        else:
-            cv2.circle(image, coord_idx, radius, (0, 255, 0), -1)
+        # if is_c_ac:
+        #     cv2.circle(image, coord_idx, radius, (0, 0, 255), -1)
+        # else:
+        #     cv2.circle(image, coord_idx, radius, (0, 255, 0), -1)
 
-        # heading_spd_point = destination(coord, point[2], 180/3600*point[0]*NM2M)
-        # add_lines_on_base_map([[coord, heading_spd_point, False]], image, display=False)
+        heading_spd_point = destination(coord, point[2], 180/3600*point[0]*NM2M)
+        add_lines_on_base_map([[coord, heading_spd_point, False]], image, display=False, **kwargs)
 
         if display and is_c_ac:
             [x, y] = coord_idx
@@ -180,7 +185,7 @@ def add_texts_on_base_map(texts, image, start=(750, 70), color=(255, 255, 255), 
     return image
 
 
-def add_lines_on_base_map(lines, image, save=False, color=(154, 250, 0), display=True, font_scale=0.4,
+def add_lines_on_base_map(lines, image, save=False, color=(255, 0, 255), display=True, font_scale=0.4,
                           font=cv2.FONT_HERSHEY_SIMPLEX, **kwargs):
     if len(lines) <= 0:
         return image
@@ -188,7 +193,7 @@ def add_lines_on_base_map(lines, image, save=False, color=(154, 250, 0), display
     decimal = 1
     for [pos0, pos1, *other] in lines:
         if other[-1]:
-            color = (255, 130, 171)
+            color = (255, 0, 255)
 
         [start, end] = convert_coord_to_pixel([pos0, pos1], **kwargs)
         cv2.line(image, start, end, color, 1)
@@ -207,5 +212,5 @@ def add_lines_on_base_map(lines, image, save=False, color=(154, 250, 0), display
     return image
 
 
-# kwargs = dict(border=[108, 118, 28, 35], scale=100)
+# kwargs = dict(border=[108, 118, 28, 35], scale=200)
 # generate_wuhan_base_map(save='wuhan_base.jpg', show=True, **kwargs)

@@ -35,7 +35,7 @@ class ConflictEnv(gym.Env, ABC):
         self.limit = limit
         self.train, self.test = load_and_split_data('scenarios_gail_final', split_ratio=0.8)
 
-        self.action_space = spaces.Discrete(CmdCount*2)
+        self.action_space = spaces.Discrete(CmdCount)
         self.observation_space = spaces.Box(low=-np.inf, high=+np.inf, shape=(350, ), dtype=np.float64)
 
         print('----------env----------')
@@ -142,7 +142,7 @@ class ConflictEnv(gym.Env, ABC):
             points = points_dict[t]
 
             # 将当前时刻所有航空器的位置和状态放在图上
-            _, points_just_coord = add_points_on_base_map(points, base_img, **kwargs)
+            _, points_just_coord = add_points_on_base_map(points, base_img, display=True, **kwargs)
 
             idx = build_rt_index_with_list(points_just_coord)
             lines = []
@@ -162,12 +162,12 @@ class ConflictEnv(gym.Env, ABC):
                     has_conflict = h_dist <= 10 and v_dist < 300
                     lines.append([pos0, pos1, h_dist, v_dist, has_conflict])
 
-            frame = add_lines_on_base_map(lines, base_img, color=(255, 255, 255), **kwargs)
+            frame = add_lines_on_base_map(lines, base_img, color=(0, 0, 255), **kwargs)
 
             frame = cv2.resize(frame, picture_size)
-            # cv2.namedWindow('video', cv2.WINDOW_AUTOSIZE)
-            # cv2.imshow('video', frame)
-            # cv2.waitKey(wait)
+            cv2.namedWindow('video', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('video', frame)
+            cv2.waitKey(wait)
             self.video_out.write(frame)
 
     def close(self):

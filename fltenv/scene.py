@@ -56,18 +56,22 @@ class ConflictScene:
         return np.concatenate(state)
 
     def do_step(self, action):
-        agent_id, idx = self.conflict_ac[action // CmdCount], action % CmdCount
+        # agent_id, idx = self.conflict_ac[action // CmdCount], action % CmdCount
+        agent_id, idx = self.conflict_ac[0], action
+
+        # 指令解析
         now = self.now()
         agent = self.agentSet.agents[agent_id]
         [hold, *cmd_list] = int_2_atc_cmd(now + 1, idx, agent)
         # print(now, action, hold, end=' ')
-        print(now, action, hold, end=' ')
+        print(action, hold, end=' ')
 
         # 执行hold，并探测冲突
-        self.agentSet.do_step(duration=hold)
-        conflicts = self.agentSet.detect_conflict_list(search=self.conflict_ac)
-        if len(conflicts) > 0:
-            return False, True, None  # solved, done, cmd
+        while self.now() < now + hold:
+            self.agentSet.do_step(duration=15)
+            conflicts = self.agentSet.detect_conflict_list(search=self.conflict_ac)
+            if len(conflicts) > 0:
+                return False, True, None  # solved, done, cmd
 
         # 分配动作
         for cmd in cmd_list:
@@ -78,26 +82,33 @@ class ConflictScene:
         self.cmd_info[now] = cmd_info
 
         # 执行动作
-        if self.__do_real(self.now() + 120):
+        now = self.now()
+        if now >= self.clock:
+            end_time = self.clock + 300
+        else:
+            end_time = self.clock
+        has_conflict = self.__do_real(end_time, duration=15)
+        if has_conflict:
             return False, True, cmd_info  # solved, done, cmd
 
         # 探测执行动作后是否存在冲突
-        has_conflict = self.__do_fake(self.clock + 300)
+        has_conflict = self.__do_fake(self.clock + 300, duration=15)
         done = not has_conflict or self.now() - self.clock >= 300
+
         return not has_conflict, done, cmd_info  # solved, done, cmd
 
-    def __do_real(self, end_time):
+    def __do_real(self, end_time, duration):
         while self.now() < end_time:
-            self.agentSet.do_step(duration=30)
+            self.agentSet.do_step(duration=duration)
             conflicts = self.agentSet.detect_conflict_list(search=self.conflict_ac)
             if len(conflicts) > 0:
                 return True
         return False
 
-    def __do_fake(self, end_time):
+    def __do_fake(self, end_time, duration):
         ghost = AircraftAgentSet(other=self.agentSet)
         while ghost.time < end_time:
-            ghost.do_step(duration=30)
+            ghost.do_step(duration=duration)
             conflicts = ghost.detect_conflict_list(search=self.conflict_ac)
             if len(conflicts) > 0:
                 return True

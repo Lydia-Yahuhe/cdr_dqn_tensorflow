@@ -287,7 +287,8 @@ def learn(env,
                 update_target()
 
         if done:
-            # env.render()
+            # if not info['result']:
+            #     env.render()
 
             print(">>> ", episode, t, round(episode_rewards[-1], 1), info['result'])
             episode += 1

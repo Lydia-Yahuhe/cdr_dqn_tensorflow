@@ -1,7 +1,7 @@
 from fltsim.aircraft import atccmd
 from fltsim.utils import convert_with_align
 
-CmdCount = 81
+CmdCount = 108
 KT2MPS = 0.514444444444444
 NM2M = 1852
 flight_level = [i*300.0 for i in range(29)]
@@ -94,27 +94,21 @@ def int_2_atc_cmd(time: int, idx: int, target):
     # return [time_cmd, alt_cmd, spd_cmd, hdg_cmd]
 
     # 将idx转化成三进制数
-    [alt_idx, spd_idx, hdg_idx, time_idx] = convert_with_align(idx, x=3, align=4)
+    time_idx, cmd_idx = idx // 9, idx % 9
     # print(idx, alt_idx, spd_idx, hdg_idx, time_idx)
 
     # time cmd
-    time_cmd = int(time_idx) * 15
+    time_cmd = 180-int(time_idx) * 15
 
+    [alt_idx, hdg_idx] = convert_with_align(cmd_idx, x=3, align=2)
     # alt cmd
     delta = (int(alt_idx) - 1) * 600.0
     targetAlt = calc_level(target.status.alt, target.status.vSpd, delta)
     alt_cmd = atccmd.AltCmd(delta=delta, targetAlt=targetAlt, assignTime=time+time_cmd)
-
-    # spd cmd
-    delta = (int(spd_idx) - 1) * 10.0 * KT2MPS
-    targetSpd = target.status.hSpd + delta
-    spd_cmd = atccmd.SpdCmd(delta=delta, targetSpd=targetSpd, assignTime=time+time_cmd)
-
     # hdg cmd
     delta = (int(hdg_idx) - 1) * 45
     hdg_cmd = atccmd.HdgCmd(delta=delta, assignTime=time+time_cmd)
-
-    return [time_cmd, alt_cmd, spd_cmd, hdg_cmd]
+    return [time_cmd, alt_cmd, hdg_cmd]
 
 
 def reward_for_cmd(cmd_info):
