@@ -47,6 +47,7 @@ class Mujoco_Dset(object):
         trajectory_data = np.load(expert_path)
         obs = trajectory_data['obs']
         acs = trajectory_data['acs']
+        print(obs.shape, acs.shape)
 
         # obs, acs: shape (N, L, ) + S where N = # episodes, L = episode length
         # and S is the environment observation/action space.

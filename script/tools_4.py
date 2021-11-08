@@ -224,7 +224,7 @@ def analysis_actions():
     ani = animation.FuncAnimation(fig, update_4, list(range(1, times + 1)),
                                   interval=1000, fargs=(interval,))
     ani.save('target_4.gif', writer='Pillow', fps=60)
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':

@@ -55,6 +55,39 @@ class ConflictScene:
 
         return np.concatenate(state)
 
+    # def get_state(self, ac_en, limit=50):
+    #     state = [[0.0 for _ in range(7)] for _ in range(limit)]
+    #
+    #     j = 0
+    #     for agent in ac_en:
+    #         pos = agent.position
+    #         v_spd, h_spd, hdg = agent.status.vSpd, agent.status.hSpd, agent.status.heading
+    #         ele = [int(agent.id in self.conflict_ac),
+    #                pos[0] - self.conflict_pos[0],
+    #                pos[1] - self.conflict_pos[1],
+    #                (pos[2] - self.conflict_pos[2]) / 3000,
+    #                (h_spd - 150) / 100,
+    #                v_spd / 20,
+    #                hdg / 180]
+    #
+    #         state[min(limit - 1, j)] = ele
+    #         j += 1
+    #     return state
+    #
+    # def get_states(self):
+    #     states = [self.get_state(self.agentSet.agent_en)]
+    #
+    #     ghost = AircraftAgentSet(other=self.agentSet)
+    #     ghost.do_step(duration=60)
+    #
+    #     states.append(self.get_state(ghost.agent_en))
+    #
+    #     ghost.do_step(duration=60)
+    #     states.append(self.get_state(ghost.agent_en))
+    #
+    #     states = np.vstack(states)
+    #     return np.concatenate(states)
+
     def do_step(self, action):
         # agent_id, idx = self.conflict_ac[action // CmdCount], action % CmdCount
         agent_id, idx = self.conflict_ac[0], action

@@ -306,16 +306,16 @@ def learn(env,
                 logger.record_tabular("time spent exploring", int(100 * exploration.value(t)))
                 logger.dump_tabular()
 
-                writer = csv.writer(open('acts_analysis.csv', 'a+', newline=''))
+                writer = csv.writer(open('acts_analysis_{}.csv'.format(network_kwargs['experiment']), 'a+', newline=''))
                 writer.writerows(acts_analysis)
 
                 # errors = []
                 episode_rewards = [0.0]
                 acts_analysis = []
 
-        if t % 1000 == 0:
+        if t % 2000 == 0:
             # path = "dataset/my_model_" + str(t) + '.pkl'
             env.shuffle_data()
-            act.save("dataset/my_model.pkl")
+            act.save("dataset/my_model_{}.pkl".format(network_kwargs['experiment']))
 
     return act

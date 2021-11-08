@@ -63,14 +63,14 @@ def output_dqn_policy(act, env, save_path='policy'):
 
 def train(test=False):
     env = ConflictEnv(limit=0)
-    network = models.mlp(num_hidden=256, num_layers=3)
+    network = models.mlp(num_hidden=256, num_layers=2)
     if not test:
         act = deepq.learn(
             env,
             network=network,  # 隐藏节点，隐藏层数
             lr=5e-4,
             batch_size=32,
-            total_timesteps=500000,
+            total_timesteps=200000,
             buffer_size=100000,
 
             param_noise=True,

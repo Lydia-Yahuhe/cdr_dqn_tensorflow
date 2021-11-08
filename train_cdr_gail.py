@@ -26,7 +26,7 @@ def argsparser():
     parser = argparse.ArgumentParser("Tensorflow Implementation of GAIL")
     parser.add_argument('--env_id', help='environment ID', default='Hopper-v2')
     parser.add_argument('--seed', help='RNG seed', type=int, default=4321)
-    parser.add_argument('--expert_path', type=str, default='.\\dataset\\dqn_policy_e_Bale.npz')
+    parser.add_argument('--expert_path', type=str, default='.\\dataset\\dqn_policy.npz')
     parser.add_argument('--checkpoint_dir', help='the directory to save model', default='.\\checkpoint')
     parser.add_argument('--log_dir', help='the directory to save log file', default='.\\log')
     # Task
@@ -72,9 +72,6 @@ def main():
         return mlp_policy.MlpPolicy(name=name, ob_space=ob_space, ac_space=ac_space,
                                     reuse=reuse, hid_size=args.policy_hidden_size, num_hid_layers=4)
 
-    pi = policy_fn("pi")  # Construct network for new policy
-    U.initialize()
-
     checkpoint_dir = osp.abspath(args.checkpoint_dir)
     task_name = args.algo + "_gail.seed_{}.BC_{}.iters_{}".format(args.seed, args.BC_iters, args.iterations)
     save_dir_pi = osp.join(checkpoint_dir, task_name)
@@ -83,6 +80,8 @@ def main():
     if args.task == 'train':
         # expert demonstrations
         dataset = Mujoco_Dset(expert_path=args.expert_path)
+
+        pi = policy_fn("pi")  # Construct network for new policy
 
         # pretrain by Behavior Clone
         if args.pretrained:
@@ -108,6 +107,8 @@ def main():
                        timesteps_per_batch=32, max_kl=0.01, cg_iters=10, cg_damping=0.1, gamma=0.995,
                        lam=0.97, vf_iters=5, vf_stepsize=1e-3)
     elif args.task == 'evaluate':
+        pi = policy_fn("pi")  # Construct network for new policy
+        U.initialize()
         U.load_variables(save_dir_pi)
         output_gail_policy(env,
                            pi,
